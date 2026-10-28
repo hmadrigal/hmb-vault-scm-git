@@ -70,6 +70,8 @@ jobs:
             echo "Maintenance release with no user-facing changes." > release-notes.md
           fi
 
+      # The CHANGELOG.md section comes first; GitHub appends its generated notes:
+      # merged PRs grouped by .github/release.yml, new contributors, compare link.
       - name: Publish release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -77,4 +79,5 @@ jobs:
           gh release create "$GITHUB_REF_NAME" \
             --title "$GITHUB_REF_NAME" \
             --notes-file release-notes.md \
+            --generate-notes \
             main.js manifest.json styles.css
