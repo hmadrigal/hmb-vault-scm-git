@@ -84,13 +84,15 @@ Commits follow [Conventional Commits](https://www.conventionalcommits.org/): `ty
 - A `!` after the type (`feat!:`) or a `BREAKING CHANGE:` footer marks a breaking change, listed first.
 - Scopes in use: `changes` (changes panel), `history`, `diff`, `settings`, `git` (backend), `init`, `release`.
 
+Pull requests: the PR title must be a conventional commit too. The *PR title* check enforces it and labels the PR (`enhancement`, `bug`, `documentation`, `maintenance`, plus `breaking change`), which groups it under *What's Changed* in the release notes (`.github/release.yml`). Squash merges use the PR title as the commit message, so `main` stays conventional.
+
 ### Releasing
 
 Releases follow Obsidian's rules: the tag is the bare version (`0.1.1`, no `v`), it matches `manifest.json`, and `main.js`, `manifest.json` and `styles.css` are attached to the release as separate files.
 
 1. With a clean working tree, run `npm version patch` (or `minor` / `major`; `feat` commits usually mean `minor`). This bumps `package.json`, copies the version into `manifest.json`, adds it to `versions.json` (mapped to the current `minAppVersion`), prepends the new section to `CHANGELOG.md` from the commits since the last tag, commits as `chore(release): x.y.z`, and creates the tag (`.npmrc` drops the `v` prefix and sets the message). Review `CHANGELOG.md` before pushing; amend the release commit and move the tag if you edit it.
 2. `git push --follow-tags`
-3. The *Release* workflow checks that the tag, `manifest.json`, `package.json` and `versions.json` agree, runs the linter, builds, and publishes the release with the three files, using this version's `CHANGELOG.md` section as the notes.
+3. The *Release* workflow checks that the tag, `manifest.json`, `package.json` and `versions.json` agree, runs the linter, builds, and publishes the release with the three files, using this version's `CHANGELOG.md` section as the notes, followed by GitHub's generated notes (merged PRs, new contributors, compare link).
 4. Obsidian's automated review and BRAT pick up the published release. Run `pnpm lint` before tagging: a lint error fails the release.
 
 If you raise `minAppVersion` in `manifest.json`, do it before step 1 so the new entry in `versions.json` records it.
