@@ -15,6 +15,16 @@ Requires Obsidian 1.13 or later, desktop only for now. It runs your installed `g
 - **Status bar**: branch, number of changes, commits ahead/behind.
 - **Safe pull**: `pull --rebase --autostash`. On a conflict the rebase is aborted, so nothing changes, and you get a notice listing the conflicting files.
 
+## Troubleshooting
+
+**"Git does not trust … because another user owns it"** (git calls it *dubious ownership*). This happens with a vault copied from another user account or computer, typically on NTFS, where the folder keeps its original owner. Git refuses to work there until you trust the folder. Use *Trust this repository…* in the changes panel or settings, which runs the same command git suggests:
+
+```sh
+git config --global --add safe.directory 'D:/path/to/vault'
+```
+
+Alternatively, make your account the folder's owner (Windows: *Properties → Security → Advanced → Owner*, apply to subfolders).
+
 ## What the plugin can access
 
 Obsidian's plugin review flags this plugin for running external programs. That is how it works, so here is exactly what it does:

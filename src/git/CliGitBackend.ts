@@ -6,6 +6,7 @@ import {
 	GitError,
 	PullResult,
 	StatusResult,
+	UnsafeRepositoryError,
 } from "./GitBackend";
 import { LOG_FORMAT, parseLog, parseStatus } from "./parse";
 
@@ -57,6 +58,8 @@ export class CliGitBackend implements GitBackend {
 						return reject(new GitError(`git executable not found ("${executable}"). Check the plugin settings.`));
 					}
 					if (error.killed) return reject(new GitError(`git ${args[0]} timed out`, stderr, code));
+					const unsafe = /detected dubious ownership in repository at '(.+)'/.exec(stderr);
+					if (unsafe) return reject(new UnsafeRepositoryError(unsafe[1], stderr));
 					reject(new GitError((stderr || error.message).trim(), stderr, code));
 				},
 			);
@@ -78,7 +81,8 @@ export class CliGitBackend implements GitBackend {
 			// Prints "true" inside a working tree, then the vault's path within it (empty at the root).
 			const [insideWorkTree, prefix] = (await this.run(["rev-parse", "--is-inside-work-tree", "--show-prefix"])).split("\n");
 			return insideWorkTree === "true" && prefix === "";
-		} catch {
+		} catch (error) {
+			if (error instanceof UnsafeRepositoryError) throw error;
 			return false;
 		}
 	}
@@ -241,5 +245,9 @@ export class CliGitBackend implements GitBackend {
 	async setRemoteUrl(remote: string, url: string): Promise<void> {
 		const exists = (await this.getRemoteUrl(remote)) !== null;
 		await this.run(["remote", exists ? "set-url" : "add", remote, url]);
+	}
+
+	async trustRepository(repoPath: string): Promise<void> {
+		await this.run(["config", "--global", "--add", "safe.directory", repoPath]);
 	}
 }

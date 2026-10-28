@@ -80,7 +80,8 @@ export class HistoryView extends ItemView {
 		const token = ++this.loadToken;
 		const path = this.mode === "file" ? (this.app.workspace.getActiveFile()?.path ?? null) : null;
 
-		if (!this.plugin.isRepo) return this.showMessage("This vault is not a git repository yet.");
+		if (this.plugin.untrustedRepoPath) return this.showMessage("Git does not trust this repository yet. Trust it from the changes panel.");
+		if (!this.plugin.isRepo) return this.showMessage("This vault is not a Git repository yet.");
 		if (this.mode === "file" && !path) return this.showMessage("Open a note to see its history.");
 
 		const commits = await this.plugin.log(path ?? undefined);

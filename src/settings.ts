@@ -52,7 +52,7 @@ export class ScmSettingTab extends PluginSettingTab {
 					{
 						name: "Initialize repository",
 						desc: 'This vault is not a Git repository yet. Create one (branch "main") with a default .gitignore.',
-						visible: () => !this.plugin.isRepo,
+						visible: () => !this.plugin.isRepo && !this.plugin.untrustedRepoPath,
 						render: (setting) => {
 							setting.addButton((btn) =>
 								btn
@@ -62,6 +62,19 @@ export class ScmSettingTab extends PluginSettingTab {
 										await this.plugin.initRepo();
 										this.update();
 									}),
+							);
+						},
+					},
+					{
+						name: "Trust repository",
+						desc: "Git refuses to use this vault's repository because another user account owns the folder. Add it to safe.directory in your global Git config.",
+						visible: () => this.plugin.untrustedRepoPath !== null,
+						render: (setting) => {
+							setting.addButton((btn) =>
+								btn
+									.setButtonText("Trust…")
+									.setCta()
+									.onClick(() => this.plugin.confirmTrustRepo()),
 							);
 						},
 					},

@@ -7,6 +7,7 @@ import {
 	FileChange,
 	GitBackend,
 	StatusResult,
+	UnsafeRepositoryError,
 	isStaged,
 	isUntracked,
 	latestAutoRun,
@@ -45,6 +46,8 @@ export default class VaultScmPlugin extends Plugin {
 	readonly events = new Events();
 	status: StatusResult | null = null;
 	isRepo = false;
+	/** Repository git refuses to use because another user owns it, until the user trusts it. */
+	untrustedRepoPath: string | null = null;
 	/** Latest run of unpushed auto-commits, newest first; empty when there is nothing to squash. */
 	squashable: CommitInfo[] = [];
 	/** When the next auto-commit check is due, or null when auto-commit is off. */
@@ -174,6 +177,7 @@ export default class VaultScmPlugin extends Plugin {
 	async refresh(): Promise<void> {
 		try {
 			this.isRepo = await this.git.isRepo();
+			this.untrustedRepoPath = null;
 			if (this.isRepo) {
 				const [status, unpushed] = await this.exclusive(async () => [
 					await this.git.status(),
@@ -188,7 +192,15 @@ export default class VaultScmPlugin extends Plugin {
 		} catch (error) {
 			this.status = null;
 			this.squashable = [];
-			console.error("[hmb-vault-scm-git] status failed", error);
+			if (error instanceof UnsafeRepositoryError) {
+				if (this.untrustedRepoPath !== error.repoPath) {
+					new Notice(`${error.message} Open the changes panel to trust it.`, 10000);
+				}
+				this.isRepo = false;
+				this.untrustedRepoPath = error.repoPath;
+			} else {
+				console.error("[hmb-vault-scm-git] status failed", error);
+			}
 		}
 		this.updateStatusBar();
 		this.events.trigger("status-changed");
@@ -353,7 +365,11 @@ export default class VaultScmPlugin extends Plugin {
 	// ---- actions ----------------------------------------------------------
 
 	async initRepo(): Promise<void> {
-		if (await this.git.isRepo()) {
+		if (this.untrustedRepoPath) {
+			this.confirmTrustRepo();
+			return;
+		}
+		if (await this.git.isRepo().catch(() => false)) {
 			new Notice("This vault already has its own Git repository.");
 			return;
 		}
@@ -454,6 +470,22 @@ export default class VaultScmPlugin extends Plugin {
 					(untracked ? ` ${untracked} new file(s) will be deleted.` : "");
 		new ConfirmModal(this.app, "Discard changes", body, "Discard", () => {
 			void this.runAction(() => this.git.discard(changes));
+		}).open();
+	}
+
+	/** Same as running `git config --global --add safe.directory <path>`, after the user confirms. */
+	confirmTrustRepo(): void {
+		const path = this.untrustedRepoPath;
+		if (!path) return;
+		const body =
+			`"${path}" belongs to another user account (for example, it was copied from another account or computer), ` +
+			"so Git refuses to use it. Trust it by adding it to safe.directory in your global Git config? " +
+			"Only do this if you know where the folder came from.";
+		new ConfirmModal(this.app, "Trust this repository", body, "Trust", () => {
+			void this.runAction(async () => {
+				await this.git.trustRepository(path);
+				new Notice(`Git now trusts "${path}".`);
+			}).then(() => this.events.trigger("head-changed"));
 		}).open();
 	}
 

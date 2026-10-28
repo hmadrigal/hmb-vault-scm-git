@@ -102,6 +102,16 @@ export class ChangesView extends ItemView {
 		this.commitEl.toggle(ready);
 		this.listEl.toggle(ready);
 
+		const untrusted = this.plugin.untrustedRepoPath;
+		if (untrusted) {
+			this.emptyEl.createEl("p", {
+				text: `Git does not trust "${untrusted}" because another user account owns it, for example after copying it from another account or computer.`,
+			});
+			this.emptyEl
+				.createEl("button", { text: "Trust this repository…", cls: "mod-cta" })
+				.addEventListener("click", () => this.plugin.confirmTrustRepo());
+			return;
+		}
 		if (!isRepo) {
 			this.emptyEl.createEl("p", { text: "This vault is not a Git repository yet." });
 			this.emptyEl

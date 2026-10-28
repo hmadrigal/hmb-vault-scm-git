@@ -82,12 +82,30 @@ export interface GitBackend {
 
 	getRemoteUrl(remote: string): Promise<string | null>;
 	setRemoteUrl(remote: string, url: string): Promise<void>;
+
+	/** Adds a folder to git's global safe.directory list (see UnsafeRepositoryError). */
+	trustRepository(repoPath: string): Promise<void>;
 }
 
 export class GitError extends Error {
 	constructor(message: string, readonly stderr = "", readonly exitCode: number | null = null) {
 		super(message);
 		this.name = "GitError";
+	}
+}
+
+/**
+ * git refuses to work in a repository owned by another user (for example a
+ * folder copied from another account or machine) until it is listed in
+ * safe.directory. `repoPath` is the repository root as git reports it.
+ */
+export class UnsafeRepositoryError extends GitError {
+	constructor(
+		readonly repoPath: string,
+		stderr: string,
+	) {
+		super(`Git does not trust "${repoPath}" because another user owns it.`, stderr, 128);
+		this.name = "UnsafeRepositoryError";
 	}
 }
 
