@@ -1,6 +1,6 @@
 {
   "name": "hmb-vault-scm-git",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Version your Obsidian vault with git: commit, push, pull, review changes and browse history.",
   "main": "main.js",
   "private": true,
