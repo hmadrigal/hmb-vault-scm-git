@@ -66,13 +66,14 @@ src/
   git/GitBackend.ts     backend interface + shared types
   git/CliGitBackend.ts  desktop implementation (git CLI)
   git/parse.ts          porcelain status / log parsers
+  git/ignore.ts         .gitignore patterns for files, names, extensions, folders
   diff/unified.ts       unified diff parser, side-by-side row pairing
   diff/render.ts        diff table renderer (split / inline)
   views/ChangesView.ts  changes side panel (list or folder tree)
   views/tree.ts         folder tree building
   views/DiffView.ts     diff editor tab
   views/HistoryView.ts  history side panel
-  ui/                   modals, DOM helpers
+  ui/                   modals, DOM helpers, date formatting (moment)
 ```
 
 ### Commit messages
