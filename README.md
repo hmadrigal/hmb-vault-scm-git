@@ -75,13 +75,22 @@ src/
   ui/                   modals, DOM helpers
 ```
 
+### Commit messages
+
+Commits follow [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): summary`, for example `feat(changes): add files to .gitignore` or `fix: detect repositories git does not trust`. `CHANGELOG.md` and the release notes are generated from them.
+
+- `feat` → *Features*, `fix` → *Bug Fixes*, `perf` → *Performance Improvements*; these appear in the changelog.
+- `docs`, `refactor`, `test`, `build`, `ci`, `style`, `chore` are for everything else and are left out of the changelog.
+- A `!` after the type (`feat!:`) or a `BREAKING CHANGE:` footer marks a breaking change, listed first.
+- Scopes in use: `changes` (changes panel), `history`, `diff`, `settings`, `git` (backend), `init`, `release`.
+
 ### Releasing
 
 Releases follow Obsidian's rules: the tag is the bare version (`0.1.1`, no `v`), it matches `manifest.json`, and `main.js`, `manifest.json` and `styles.css` are attached to the release as separate files.
 
-1. With a clean working tree, run `npm version patch` (or `minor` / `major`). This bumps `package.json`, copies the version into `manifest.json`, adds it to `versions.json` (mapped to the current `minAppVersion`), commits, and creates the tag (`.npmrc` drops the `v` prefix).
+1. With a clean working tree, run `npm version patch` (or `minor` / `major`; `feat` commits usually mean `minor`). This bumps `package.json`, copies the version into `manifest.json`, adds it to `versions.json` (mapped to the current `minAppVersion`), prepends the new section to `CHANGELOG.md` from the commits since the last tag, commits as `chore(release): x.y.z`, and creates the tag (`.npmrc` drops the `v` prefix and sets the message). Review `CHANGELOG.md` before pushing; amend the release commit and move the tag if you edit it.
 2. `git push --follow-tags`
-3. The *Release* workflow checks that the tag, `manifest.json`, `package.json` and `versions.json` agree, runs the linter, builds, and publishes the release with the three files and generated notes.
+3. The *Release* workflow checks that the tag, `manifest.json`, `package.json` and `versions.json` agree, runs the linter, builds, and publishes the release with the three files, using this version's `CHANGELOG.md` section as the notes.
 4. Obsidian's automated review and BRAT pick up the published release. Run `pnpm lint` before tagging: a lint error fails the release.
 
 If you raise `minAppVersion` in `manifest.json`, do it before step 1 so the new entry in `versions.json` records it.
