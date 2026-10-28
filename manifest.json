@@ -1,7 +1,7 @@
 {
 	"id": "hmb-vault-scm-git",
 	"name": "HMB Vault SCM Git",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"minAppVersion": "1.13.0",
 	"description": "Version your vault with git: commit, push, pull, review changes and browse history.",
 	"author": "hmadrigal",
