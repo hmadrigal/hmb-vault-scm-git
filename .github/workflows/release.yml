@@ -58,12 +58,16 @@ jobs:
       # `npm version` from the conventional commits since the previous tag.
       - name: Extract release notes
         run: |
-          awk -v tag="$GITHUB_REF_NAME" '
+          if ! awk -v tag="$GITHUB_REF_NAME" '
             /^## / { if (found) exit; if (index($0, "## [" tag "]") == 1 || index($0, "## " tag " ") == 1) { found = 1; next } }
             found { print }
-          ' CHANGELOG.md > release-notes.md
-          if ! grep -q '[^[:space:]]' release-notes.md; then
+            END { exit !found }
+          ' CHANGELOG.md > release-notes.md; then
             echo "::error::CHANGELOG.md has no section for $GITHUB_REF_NAME"; exit 1
+          fi
+          # Only build, docs, ci, etc. commits: nothing user-facing to list.
+          if ! grep -q '[^[:space:]]' release-notes.md; then
+            echo "Maintenance release with no user-facing changes." > release-notes.md
           fi
 
       - name: Publish release
