@@ -1,0 +1,24 @@
+{
+  "name": "hmb-vault-scm-git",
+  "version": "0.1.0",
+  "description": "Version your Obsidian vault with git: commit, push, pull, review changes and browse history.",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc --noEmit && node esbuild.config.mjs production",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "obsidian",
+    "obsidian-plugin",
+    "git"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "esbuild": "^0.28.2",
+    "obsidian": "^1.14.4",
+    "typescript": "^5.9.3"
+  }
+}

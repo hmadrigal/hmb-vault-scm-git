@@ -1,0 +1,13 @@
+node_modules/
+
+# Build output (attached to GitHub releases, not committed)
+main.js
+*.js.map
+
+# Local development vault
+test-vault/
+
+# Obsidian plugin settings when the repo itself is opened as a vault
+data.json
+
+.DS_Store

@@ -1,0 +1,380 @@
+/* ---- shared ------------------------------------------------------------ */
+
+.hmb-scm-view {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-4-2);
+	padding: var(--size-4-2) var(--size-4-3);
+}
+
+.hmb-scm-muted {
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+}
+
+.hmb-scm-actions {
+	display: flex;
+	align-items: center;
+	gap: 1px;
+	flex-shrink: 0;
+}
+
+.hmb-scm-icon-btn {
+	padding: 2px;
+}
+
+.hmb-scm-icon-btn svg {
+	width: var(--icon-xs);
+	height: var(--icon-xs);
+}
+
+.hmb-scm-wide-input {
+	width: 100%;
+	min-width: 18em;
+}
+
+.hmb-scm-empty button {
+	margin-top: var(--size-4-2);
+}
+
+/* ---- changes panel ----------------------------------------------------- */
+
+.hmb-scm-header {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.hmb-scm-branch {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-1);
+	font-weight: var(--font-semibold);
+}
+
+.hmb-scm-branch-icon {
+	display: flex;
+	color: var(--text-accent);
+}
+
+.hmb-scm-toolbar {
+	display: flex;
+	gap: 2px;
+	margin-top: var(--size-4-1);
+}
+
+.hmb-scm-commit {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-4-2);
+}
+
+.hmb-scm-message {
+	width: 100%;
+	resize: vertical;
+	min-height: 4.5em;
+	font-size: var(--font-ui-small);
+}
+
+.hmb-scm-commit-buttons {
+	display: flex;
+	gap: var(--size-4-2);
+}
+
+.hmb-scm-commit-buttons button {
+	flex: 1;
+}
+
+.hmb-scm-section + .hmb-scm-section {
+	margin-top: var(--size-4-3);
+}
+
+.hmb-scm-section-header {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-1);
+	padding: 2px var(--size-4-1);
+	font-size: var(--font-ui-smaller);
+	font-weight: var(--font-semibold);
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+
+.hmb-scm-section-title {
+	flex: 1;
+}
+
+.hmb-scm-count {
+	min-width: 1.6em;
+	padding: 0 var(--size-4-1);
+	border-radius: var(--radius-l);
+	background: var(--background-modifier-hover);
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+	text-align: center;
+}
+
+/* File and folder rows; --hmb-scm-depth is set per row in tree layout. */
+.hmb-scm-row {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-1);
+	padding: 1px var(--size-4-1);
+	padding-left: calc(var(--size-4-1) + var(--hmb-scm-depth, 0) * 14px);
+	border-radius: var(--radius-s);
+	cursor: var(--cursor);
+}
+
+.hmb-scm-row:hover {
+	background: var(--background-modifier-hover);
+}
+
+.hmb-scm-row-name {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-size: var(--font-ui-small);
+}
+
+.hmb-scm-chevron,
+.hmb-scm-folder-icon {
+	display: flex;
+	flex-shrink: 0;
+	color: var(--text-muted);
+}
+
+.hmb-scm-chevron svg,
+.hmb-scm-folder-icon svg {
+	width: var(--icon-xs);
+	height: var(--icon-xs);
+}
+
+.hmb-scm-file-dir {
+	margin-left: var(--size-4-2);
+	color: var(--text-faint);
+	font-size: var(--font-ui-smaller);
+}
+
+.hmb-scm-file-deleted .hmb-scm-file-basename {
+	text-decoration: line-through;
+	color: var(--text-muted);
+}
+
+.hmb-scm-badge {
+	width: 1.2em;
+	flex-shrink: 0;
+	text-align: center;
+	font-family: var(--font-monospace);
+	font-size: var(--font-ui-smaller);
+	font-weight: var(--font-bold);
+}
+
+.hmb-scm-badge-modified { color: var(--color-yellow); }
+.hmb-scm-badge-added,
+.hmb-scm-badge-untracked { color: var(--color-green); }
+.hmb-scm-badge-deleted,
+.hmb-scm-badge-conflict { color: var(--color-red); }
+.hmb-scm-badge-renamed,
+.hmb-scm-badge-copied { color: var(--color-blue); }
+
+.hmb-scm-icon-btn.is-active {
+	color: var(--interactive-accent);
+}
+
+.hmb-scm-squash-bar {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-2);
+	margin-top: var(--size-4-2);
+	padding: var(--size-4-1) var(--size-4-2);
+	border-radius: var(--radius-s);
+	background: var(--background-secondary);
+	font-size: var(--font-ui-small);
+}
+
+.hmb-scm-squash-icon {
+	display: flex;
+	color: var(--text-accent);
+}
+
+.hmb-scm-squash-icon svg {
+	width: var(--icon-xs);
+	height: var(--icon-xs);
+}
+
+.hmb-scm-squash-text {
+	flex: 1;
+}
+
+.hmb-scm-modal-list {
+	max-height: 12em;
+	overflow: auto;
+	font-family: var(--font-monospace);
+	font-size: var(--font-smaller);
+}
+
+/* ---- history panel ----------------------------------------------------- */
+
+.hmb-scm-auto-badge {
+	margin-right: var(--size-4-1);
+	padding: 0 var(--size-4-1);
+	border-radius: var(--radius-s);
+	background: var(--background-modifier-hover);
+	color: var(--text-muted);
+	font-size: var(--font-ui-smallest);
+}
+
+/* Commits that the squash action would combine. */
+.hmb-scm-commit-row.hmb-scm-squashable {
+	box-shadow: inset 2px 0 0 var(--interactive-accent);
+}
+
+.hmb-scm-history-toolbar {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-1);
+}
+
+.hmb-scm-history-toolbar select {
+	flex: 1;
+}
+
+.hmb-scm-history-title {
+	overflow-wrap: anywhere;
+}
+
+.hmb-scm-commit-row {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-1);
+	padding: var(--size-4-1);
+	border-radius: var(--radius-s);
+	cursor: var(--cursor);
+}
+
+.hmb-scm-commit-row:hover {
+	background: var(--background-modifier-hover);
+}
+
+.hmb-scm-commit-text {
+	flex: 1;
+	min-width: 0;
+}
+
+.hmb-scm-commit-subject {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-size: var(--font-ui-small);
+}
+
+/* ---- status bar -------------------------------------------------------- */
+
+.hmb-scm-statusbar {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-1);
+}
+
+.hmb-scm-statusbar-icon {
+	display: flex;
+}
+
+.hmb-scm-statusbar-icon svg {
+	width: var(--icon-xs);
+	height: var(--icon-xs);
+}
+
+/* ---- diff tab ---------------------------------------------------------- */
+
+.hmb-scm-diff-view {
+	padding: 0;
+}
+
+.hmb-scm-diff-body {
+	height: 100%;
+	overflow: auto;
+	padding: var(--size-4-3);
+	user-select: text;
+}
+
+.hmb-scm-diff-commit-info {
+	margin-bottom: var(--size-4-3);
+}
+
+.hmb-scm-diff-commit-info .hmb-scm-commit-subject {
+	font-size: var(--font-ui-medium);
+	font-weight: var(--font-semibold);
+	white-space: normal;
+}
+
+.hmb-scm-diff-file {
+	margin-bottom: var(--size-4-4);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-m);
+	overflow: hidden;
+}
+
+.hmb-scm-diff-file-header {
+	padding: var(--size-4-1) var(--size-4-2);
+	background: var(--background-secondary);
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.hmb-scm-diff-file-name {
+	font-weight: var(--font-semibold);
+	font-size: var(--font-ui-small);
+	overflow-wrap: anywhere;
+}
+
+.hmb-scm-diff-table {
+	width: 100%;
+	border-collapse: collapse;
+	table-layout: fixed;
+	font-family: var(--font-monospace);
+	font-size: var(--font-smaller);
+	line-height: 1.5;
+}
+
+.hmb-scm-diff-table td {
+	padding: 0 var(--size-4-2);
+	border: none;
+	vertical-align: top;
+}
+
+.hmb-scm-diff-num {
+	width: 3.5em;
+	text-align: right;
+	color: var(--text-faint);
+	user-select: none;
+}
+
+.hmb-scm-diff-code {
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+/* Divider between the old and new halves of a side-by-side diff. */
+.hmb-scm-diff-split td:nth-child(3) {
+	border-left: 1px solid var(--background-modifier-border);
+}
+
+.hmb-scm-diff-hunk td {
+	padding: var(--size-2-1) var(--size-4-2);
+	background: var(--background-secondary);
+	color: var(--text-muted);
+	font-size: var(--font-smallest);
+}
+
+.hmb-scm-diff-add { background: rgba(var(--color-green-rgb), 0.14); }
+.hmb-scm-diff-del { background: rgba(var(--color-red-rgb), 0.14); }
+.hmb-scm-diff-num.hmb-scm-diff-add { background: rgba(var(--color-green-rgb), 0.22); }
+.hmb-scm-diff-num.hmb-scm-diff-del { background: rgba(var(--color-red-rgb), 0.22); }
+.hmb-scm-diff-filler { background: var(--background-secondary-alt); }
+
+.hmb-scm-diff-empty {
+	padding: var(--size-4-2);
+	color: var(--text-muted);
+}
