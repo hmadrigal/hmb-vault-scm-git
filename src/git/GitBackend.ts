@@ -57,6 +57,10 @@ export interface GitBackend {
 	stageAll(): Promise<void>;
 	unstage(paths: string[]): Promise<void>;
 	discard(changes: FileChange[]): Promise<void>;
+	/** Committed files that .gitignore now matches (git keeps tracking them until untracked). */
+	trackedIgnoredFiles(): Promise<string[]>;
+	/** Removes files from the index only; they stay on disk and show as staged deletions. */
+	untrack(paths: string[]): Promise<void>;
 	/** Commits what is staged and returns the new short hash. */
 	commit(message: string): Promise<string>;
 

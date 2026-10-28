@@ -113,6 +113,18 @@ export class CliGitBackend implements GitBackend {
 		else await this.run(["rm", "-r", "-q", "--cached", "--", ...paths]);
 	}
 
+	async trackedIgnoredFiles(): Promise<string[]> {
+		const out = await this.run(["ls-files", "-z", "--cached", "--ignored", "--exclude-standard"]);
+		return out.split("\0").filter(Boolean);
+	}
+
+	async untrack(paths: string[]): Promise<void> {
+		// Batches keep the command line under Windows' length limit.
+		for (let i = 0; i < paths.length; i += 100) {
+			await this.run(["rm", "--cached", "-r", "-q", "--", ...paths.slice(i, i + 100)]);
+		}
+	}
+
 	async discard(changes: FileChange[]): Promise<void> {
 		for (const change of changes) {
 			if (change.index === "?") {

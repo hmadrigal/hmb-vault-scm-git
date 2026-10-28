@@ -12,6 +12,7 @@ import {
 	isUntracked,
 	latestAutoRun,
 } from "./git/GitBackend";
+import { appendToGitignore } from "./git/ignore";
 import { DEFAULT_SETTINGS, ScmSettingTab, ScmSettings } from "./settings";
 import { CommitModal, ConfirmModal } from "./ui/modals";
 import { formatDate } from "./ui/time";
@@ -27,10 +28,8 @@ const AUTO_COMMIT_IDLE_MS = 30_000;
 /** Most unpushed commits examined when looking for a squashable run. */
 const SQUASH_SCAN_LIMIT = 500;
 
-const DEFAULT_GITIGNORE = `# Obsidian state that changes constantly or is device-specific
-.obsidian/workspace.json
-.obsidian/workspace-mobile.json
-.obsidian/cache
+const DEFAULT_GITIGNORE = `# Obsidian settings, plugins and workspace state, at any level of the vault
+.obsidian/
 
 # Deleted notes
 .trash/
@@ -470,6 +469,38 @@ export default class VaultScmPlugin extends Plugin {
 					(untracked ? ` ${untracked} new file(s) will be deleted.` : "");
 		new ConfirmModal(this.app, "Discard changes", body, "Discard", () => {
 			void this.runAction(() => this.git.discard(changes));
+		}).open();
+	}
+
+	/**
+	 * Appends patterns to the vault's .gitignore. Files that were already committed
+	 * keep being tracked, so if the new patterns match any, offer to untrack them.
+	 */
+	async addToGitignore(patterns: string[]): Promise<void> {
+		const result = await this.runAction(async () => {
+			const adapter = this.app.vault.adapter;
+			const before = new Set(await this.git.trackedIgnoredFiles());
+			const existing = (await adapter.exists(".gitignore")) ? await adapter.read(".gitignore") : "";
+			const updated = appendToGitignore(existing, patterns);
+			if (updated !== null) await adapter.write(".gitignore", updated);
+			const newlyIgnored = (await this.git.trackedIgnoredFiles()).filter((path) => !before.has(path));
+			return { changed: updated !== null, newlyIgnored };
+		});
+		if (!result) return;
+		const list = patterns.join(", ");
+		new Notice(result.changed ? `Added ${list} to .gitignore.` : `.gitignore already contains ${list}.`);
+		if (result.newlyIgnored.length) this.confirmUntrack(result.newlyIgnored);
+	}
+
+	private confirmUntrack(paths: string[]): void {
+		const shown = paths.slice(0, 5).map((path) => `"${path}"`).join(", ");
+		const more = paths.length > 5 ? ` and ${paths.length - 5} more` : "";
+		const body =
+			`${paths.length === 1 ? "This file is" : `${paths.length} files are`} already committed: ${shown}${more}. ` +
+			"Git keeps tracking committed files even when .gitignore matches them. Stop tracking them? " +
+			"They stay on disk; their removal from the repository shows up as staged changes to commit.";
+		new ConfirmModal(this.app, "Stop tracking ignored files", body, "Stop tracking", () => {
+			void this.runAction(() => this.git.untrack(paths));
 		}).open();
 	}
 

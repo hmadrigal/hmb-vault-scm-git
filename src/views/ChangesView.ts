@@ -1,5 +1,6 @@
-import { ItemView, WorkspaceLeaf, setIcon } from "obsidian";
+import { ItemView, Menu, WorkspaceLeaf, setIcon } from "obsidian";
 import { FileChange, hasWorktreeChange, isStaged, isUntracked } from "../git/GitBackend";
+import { IgnoreOption, ignoreOptionForFolder, ignoreOptionsForFile } from "../git/ignore";
 import type VaultScmPlugin from "../main";
 import { iconButton } from "../ui/dom";
 import { FolderNode, buildTree, filesUnder } from "./tree";
@@ -233,7 +234,9 @@ export class ChangesView extends ItemView {
 		setIcon(chevron, collapsed ? "chevron-right" : "chevron-down");
 		setIcon(row.createSpan({ cls: "hmb-scm-folder-icon" }), collapsed ? "folder" : "folder-open");
 		row.createDiv({ cls: "hmb-scm-row-name", text: folder.name });
-		this.renderGroupActions(row.createDiv({ cls: "hmb-scm-actions" }), files, staged, "folder");
+		const actions = row.createDiv({ cls: "hmb-scm-actions" });
+		this.addIgnoreActions(row, actions, [ignoreOptionForFolder(folder.path)]);
+		this.renderGroupActions(actions, files, staged, "folder");
 		row.createSpan({ cls: "hmb-scm-count", text: String(files.length) });
 
 		row.addEventListener("click", () => {
@@ -259,6 +262,7 @@ export class ChangesView extends ItemView {
 
 		const actions = row.createDiv({ cls: "hmb-scm-actions" });
 		if (kind !== "deleted") iconButton(actions, "file-text", "Open note", () => void this.plugin.openFile(file.path));
+		this.addIgnoreActions(row, actions, ignoreOptionsForFile(file.path));
 		if (staged) {
 			iconButton(actions, "minus", "Unstage", () => void this.plugin.unstage([file.path]));
 		} else {
@@ -273,5 +277,26 @@ export class ChangesView extends ItemView {
 
 		// Like VS Code, clicking a changed file opens its diff.
 		row.addEventListener("click", () => void this.plugin.openDiff({ kind: "working", change: file, staged }));
+	}
+
+	/** "Add to .gitignore" button, and the same menu on right-click of the row. */
+	private addIgnoreActions(row: HTMLElement, actions: HTMLElement, options: IgnoreOption[]): void {
+		const show = (evt: MouseEvent) => {
+			const menu = new Menu();
+			for (const option of options) {
+				menu.addItem((item) =>
+					item
+						.setTitle(`${option.label} (${option.pattern})`)
+						.setIcon("eye-off")
+						.onClick(() => void this.plugin.addToGitignore([option.pattern])),
+				);
+			}
+			menu.showAtMouseEvent(evt);
+		};
+		iconButton(actions, "eye-off", "Add to .gitignore…", show);
+		row.addEventListener("contextmenu", (evt) => {
+			evt.preventDefault();
+			show(evt);
+		});
 	}
 }

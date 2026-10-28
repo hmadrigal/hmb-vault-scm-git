@@ -7,6 +7,7 @@ Requires Obsidian 1.13 or later, desktop only for now. It runs your installed `g
 ## Features
 
 - **Changes panel** (ribbon icon or *Open changes panel*), modelled on VS Code's Source Control view: branch and ahead/behind, *Staged changes* and *Changes* shown as a folder tree or a flat list, stage, unstage or discard a file, a folder or everything, then commit or commit and push. With nothing staged, *Commit* commits everything.
+- **Ignore files from the panel**: the eye-off button on a changed file or folder (or right-click) adds it to `.gitignore`: this file, every file with the same name, every file with the same extension (`*.png`), or the folder. If the new pattern matches files that are already committed, you are offered to stop tracking them (they stay on disk).
 - **Diff tab**: clicking a file or a commit opens its diff in an editor tab, side-by-side or inline, showing only the changes or the whole file. Diffs of uncommitted changes update as you edit.
 - **History panel**: commits of the whole vault or of the current note. Click a commit to see its diff; in *Current file* mode you can restore an older version.
 - **Auto-commit**: commits all changes every N minutes (turn on in settings or with the timer button in the changes panel), waiting until you have stopped typing for 30 seconds. Optionally pushes afterwards. Auto-commits carry an `Auto-commit: true` trailer.
@@ -29,7 +30,7 @@ Alternatively, make your account the folder's owner (Windows: *Properties → Se
 
 Obsidian's plugin review flags this plugin for running external programs. That is how it works, so here is exactly what it does:
 
-- **Runs `git`, and nothing else.** Commands go through Node's `child_process.execFile` to the `git` executable on your PATH, or the path set under *Settings → Git executable*. No shell is involved, and every command runs in the vault folder. The plugin itself only writes one file: the default `.gitignore` when you initialize a repository, through Obsidian's vault API. Everything else is done by `git`.
+- **Runs `git`, and nothing else.** Commands go through Node's `child_process.execFile` to the `git` executable on your PATH, or the path set under *Settings → Git executable*. No shell is involved, and every command runs in the vault folder. The only file the plugin writes itself is `.gitignore` (when you initialize a repository or ignore a file from the changes panel), through Obsidian's vault API. Everything else is done by `git`.
 - **Files outside the vault.** `git` reads its own configuration (for example `~/.gitconfig`), and when you push, pull or fetch it uses your SSH keys or credential manager. The plugin never reads these.
 - **Network.** The only network traffic is `git` talking to the remote you configured, and only when you push, pull or fetch, or when auto-commit is set to push afterwards.
 - **No telemetry**, no accounts, no ads.
@@ -38,7 +39,7 @@ Each release's `main.js`, `manifest.json` and `styles.css` carry a [build proven
 
 ## Setup in a vault
 
-1. Run *Initialize repository in this vault*. This creates branch `main`, a default `.gitignore` (workspace files, `.trash/`), and sets `core.autocrlf=false` so notes are stored exactly as Obsidian writes them.
+1. Run *Initialize repository in this vault*. This creates branch `main`, a default `.gitignore` (`.obsidian/` folders at any level, so settings, plugins and workspace state are not versioned, plus `.trash/`), and sets `core.autocrlf=false` so notes are stored exactly as Obsidian writes them.
 2. Make sure git knows who you are: `git config --global user.name "…"` and `git config --global user.email "…"`.
 3. Create an empty repository on GitHub (private, most likely) and paste its URL under *Settings → Remote URL*.
 4. Commit, then push. The first push sets the upstream branch.
