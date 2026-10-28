@@ -1,4 +1,4 @@
-import { Events, FileSystemAdapter, Notice, Plugin, TFile, WorkspaceLeaf, debounce, moment, setIcon } from "obsidian";
+import { Events, FileSystemAdapter, Notice, Plugin, TFile, WorkspaceLeaf, debounce, setIcon } from "obsidian";
 import { hostname } from "os";
 import { CliGitBackend } from "./git/CliGitBackend";
 import {
@@ -13,6 +13,7 @@ import {
 } from "./git/GitBackend";
 import { DEFAULT_SETTINGS, ScmSettingTab, ScmSettings } from "./settings";
 import { CommitModal, ConfirmModal } from "./ui/modals";
+import { formatDate } from "./ui/time";
 import { CHANGES_VIEW_TYPE, ChangesView } from "./views/ChangesView";
 import { DIFF_VIEW_TYPE, DiffRequest, DiffView } from "./views/DiffView";
 import { HISTORY_VIEW_TYPE, HistoryMode, HistoryView } from "./views/HistoryView";
@@ -62,7 +63,7 @@ export default class VaultScmPlugin extends Plugin {
 
 		const adapter = this.app.vault.adapter;
 		if (!(adapter instanceof FileSystemAdapter)) {
-			new Notice("HMB Vault SCM Git only works on desktop.");
+			new Notice("This plugin needs the desktop app.");
 			return;
 		}
 		this.git = new CliGitBackend(adapter.getBasePath(), () => this.settings.gitPath);
@@ -71,7 +72,7 @@ export default class VaultScmPlugin extends Plugin {
 		this.registerView(HISTORY_VIEW_TYPE, (leaf) => new HistoryView(leaf, this));
 		this.registerView(DIFF_VIEW_TYPE, (leaf) => new DiffView(leaf, this));
 		this.addSettingTab(new ScmSettingTab(this.app, this));
-		this.addRibbonIcon("git-branch", "Open git changes", () => void this.activateView(CHANGES_VIEW_TYPE));
+		this.addRibbonIcon("git-branch", "Open Git changes", () => void this.activateView(CHANGES_VIEW_TYPE));
 		this.registerCommands();
 
 		this.statusBarEl = this.addStatusBarItem();
@@ -147,7 +148,7 @@ export default class VaultScmPlugin extends Plugin {
 	// ---- settings ---------------------------------------------------------
 
 	async loadSettings(): Promise<void> {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, (await this.loadData()) as Partial<ScmSettings> | null);
 	}
 
 	async saveSettings(): Promise<void> {
@@ -156,7 +157,7 @@ export default class VaultScmPlugin extends Plugin {
 
 	renderTemplate(count: number): string {
 		return this.settings.commitTemplate
-			.replace(/{{date}}/g, moment().format(this.settings.dateFormat))
+			.replace(/{{date}}/g, formatDate(Date.now(), this.settings.dateFormat))
 			.replace(/{{count}}/g, String(count))
 			.replace(/{{hostname}}/g, hostname());
 	}
@@ -207,7 +208,7 @@ export default class VaultScmPlugin extends Plugin {
 		if (status.upstream && (status.ahead || status.behind)) text += ` · ↑${status.ahead} ↓${status.behind}`;
 		el.createSpan({ text });
 
-		let label = "Open git changes";
+		let label = "Open Git changes";
 		if (this.settings.autoCommitEnabled) {
 			setIcon(el.createSpan({ cls: "hmb-scm-statusbar-icon" }), "timer");
 			label += `\n${this.autoCommitDescription()}`;
@@ -218,7 +219,7 @@ export default class VaultScmPlugin extends Plugin {
 	/** e.g. "Auto-commit every 10 min, next check 14:32". */
 	autoCommitDescription(): string {
 		const every = `Auto-commit every ${this.settings.autoCommitIntervalMinutes} min`;
-		return this.nextAutoCommitAt ? `${every}, next check ${moment(this.nextAutoCommitAt).format("LT")}` : every;
+		return this.nextAutoCommitAt ? `${every}, next check ${formatDate(this.nextAutoCommitAt, "LT")}` : every;
 	}
 
 	/** Runs a git operation with error reporting, then refreshes the status. */
@@ -310,7 +311,7 @@ export default class VaultScmPlugin extends Plugin {
 		}
 		const newest = run[0];
 		const oldest = run[run.length - 1];
-		const format = (date: Date) => moment(date).format(this.settings.dateFormat);
+		const format = (date: Date) => formatDate(date, this.settings.dateFormat);
 		const defaultMessage =
 			run.length === 1 ? newest.subject : `vault changes ${format(oldest.date)} to ${format(newest.date)}`;
 		const noun = `auto-commit${run.length === 1 ? "" : "s"}`;
@@ -353,7 +354,7 @@ export default class VaultScmPlugin extends Plugin {
 
 	async initRepo(): Promise<void> {
 		if (await this.git.isRepo()) {
-			new Notice("This vault already has its own git repository.");
+			new Notice("This vault already has its own Git repository.");
 			return;
 		}
 		await this.runAction(async () => {

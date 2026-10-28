@@ -2,7 +2,7 @@
 
 An Obsidian plugin to version your vault with git: commit, push and pull, review pending changes, and browse the history of the vault or a single note.
 
-Desktop only for now. It runs your installed `git`, so pushing uses whatever SSH keys or credential manager you already have set up. Mobile support (isomorphic-git) is planned behind the same `GitBackend` interface.
+Requires Obsidian 1.13 or later, desktop only for now. It runs your installed `git`, so pushing uses whatever SSH keys or credential manager you already have set up. Mobile support (isomorphic-git) is planned behind the same `GitBackend` interface.
 
 ## Features
 
@@ -30,6 +30,7 @@ Requires Node.js (LTS) and pnpm.
 pnpm install
 pnpm dev     # watch mode
 pnpm build   # type check + production bundle
+pnpm lint    # ESLint with Obsidian's review rules (eslint-plugin-obsidianmd)
 ```
 
 Builds go to `main.js` in the repository root. When a `test-vault/` folder exists (git-ignored), each build is also copied into `test-vault/.obsidian/plugins/hmb-vault-scm-git/`. Open `test-vault` as a vault in Obsidian, turn on community plugins, and enable **HMB Vault SCM Git**. Run *Reload app without saving* (Ctrl+R) after rebuilding, or install the [Hot Reload](https://github.com/pjeby/hot-reload) plugin in the test vault.
@@ -58,8 +59,8 @@ Releases follow Obsidian's rules: the tag is the bare version (`0.1.1`, no `v`),
 
 1. With a clean working tree, run `npm version patch` (or `minor` / `major`). This bumps `package.json`, copies the version into `manifest.json`, adds it to `versions.json` (mapped to the current `minAppVersion`), commits, and creates the tag (`.npmrc` drops the `v` prefix).
 2. `git push --follow-tags`
-3. The *Release* workflow checks that the tag, `manifest.json`, `package.json` and `versions.json` agree, builds, and creates a **draft** release with the three files and generated notes.
-4. Review the draft on GitHub and publish it. Obsidian and BRAT only see published releases.
+3. The *Release* workflow checks that the tag, `manifest.json`, `package.json` and `versions.json` agree, runs the linter, builds, and publishes the release with the three files and generated notes.
+4. Obsidian's automated review and BRAT pick up the published release. Run `pnpm lint` before tagging: a lint error fails the release.
 
 If you raise `minAppVersion` in `manifest.json`, do it before step 1 so the new entry in `versions.json` records it.
 

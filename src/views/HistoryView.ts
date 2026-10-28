@@ -1,7 +1,8 @@
-import { DropdownComponent, ItemView, WorkspaceLeaf, moment } from "obsidian";
+import { DropdownComponent, ItemView, WorkspaceLeaf } from "obsidian";
 import type { CommitInfo } from "../git/GitBackend";
 import type VaultScmPlugin from "../main";
 import { iconButton } from "../ui/dom";
+import { formatDate, fromNow } from "../ui/time";
 
 export const HISTORY_VIEW_TYPE = "hmb-scm-history";
 
@@ -102,7 +103,7 @@ export class HistoryView extends ItemView {
 
 	private renderCommit(commit: CommitInfo, path: string | null): void {
 		const row = this.listEl.createDiv({ cls: "hmb-scm-commit-row" });
-		row.setAttr("aria-label", `${commit.hash}\n${commit.author}, ${moment(commit.date).format("LLL")}`);
+		row.setAttr("aria-label", `${commit.hash}\n${commit.author}, ${formatDate(commit.date, "LLL")}`);
 
 		if (this.plugin.squashable.some((c) => c.hash === commit.hash)) row.addClass("hmb-scm-squashable");
 
@@ -112,7 +113,7 @@ export class HistoryView extends ItemView {
 		subject.appendText(commit.subject);
 		text.createDiv({
 			cls: "hmb-scm-muted",
-			text: `${commit.shortHash} · ${commit.author} · ${moment(commit.date).fromNow()}`,
+			text: `${commit.shortHash} · ${commit.author} · ${fromNow(commit.date)}`,
 		});
 
 		const actions = row.createDiv({ cls: "hmb-scm-actions" });

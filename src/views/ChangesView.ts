@@ -103,7 +103,7 @@ export class ChangesView extends ItemView {
 		this.listEl.toggle(ready);
 
 		if (!isRepo) {
-			this.emptyEl.createEl("p", { text: "This vault is not a git repository yet." });
+			this.emptyEl.createEl("p", { text: "This vault is not a Git repository yet." });
 			this.emptyEl
 				.createEl("button", { text: "Initialize repository", cls: "mod-cta" })
 				.addEventListener("click", () => void this.plugin.initRepo());
@@ -149,10 +149,10 @@ export class ChangesView extends ItemView {
 		iconButton(toolbar, "arrow-up", "Push", () => void this.plugin.push());
 		iconButton(toolbar, "history", "Open history", () => void this.plugin.openHistory("vault"));
 		const tree = this.plugin.settings.changesLayout === "tree";
-		iconButton(toolbar, tree ? "list" : "list-tree", tree ? "View as list" : "View as tree", async () => {
+		iconButton(toolbar, tree ? "list" : "list-tree", tree ? "View as list" : "View as tree", () => {
 			this.plugin.settings.changesLayout = tree ? "list" : "tree";
-			await this.plugin.saveSettings();
 			this.render();
+			void this.plugin.saveSettings();
 		});
 
 		const autoOn = this.plugin.settings.autoCommitEnabled;
