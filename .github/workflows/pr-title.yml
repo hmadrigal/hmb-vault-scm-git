@@ -1,0 +1,43 @@
+name: PR title
+
+# Squash merges use the PR title as the commit message, and CHANGELOG.md is
+# generated from commit messages, so PR titles must be Conventional Commits.
+# The matching label groups the PR in GitHub's generated release notes.
+#
+# pull_request_target so it can label PRs from forks too. It never checks out
+# or runs the PR's code, and the title is only read through an environment variable.
+on:
+  pull_request_target:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check title and label the PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITLE: ${{ github.event.pull_request.title }}
+          NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          pattern='^(feat|fix|perf|docs|refactor|test|build|ci|style|chore|revert)(\([a-z0-9-]+\))?(!)?: .+'
+          if ! [[ "$TITLE" =~ $pattern ]]; then
+            echo "::error::PR title must follow Conventional Commits, e.g. \"feat(changes): add files to .gitignore\" or \"fix: handle untrusted repositories\". Got: $TITLE"
+            exit 1
+          fi
+          type="${BASH_REMATCH[1]}"
+          case "$type" in
+            feat|perf) label="enhancement" ;;
+            fix) label="bug" ;;
+            docs) label="documentation" ;;
+            *) label="maintenance" ;;
+          esac
+          [ -n "${BASH_REMATCH[3]}" ] && label="$label,breaking change"
+          remove="enhancement,bug,documentation,maintenance,breaking change"
+          gh pr edit "$NUMBER" --repo "$REPO" --remove-label "$remove" >/dev/null 2>&1 || true
+          gh pr edit "$NUMBER" --repo "$REPO" --add-label "$label"
+          echo "Labelled #$NUMBER as: $label"

@@ -1,0 +1,14 @@
+# Groups pull requests in GitHub's generated release notes ("What's Changed").
+# The labels are set from each PR's conventional title by .github/workflows/pr-title.yml.
+changelog:
+  categories:
+    - title: ⚠ Breaking changes
+      labels: ["breaking change"]
+    - title: Features
+      labels: [enhancement]
+    - title: Bug fixes
+      labels: [bug]
+    - title: Documentation
+      labels: [documentation]
+    - title: Maintenance
+      labels: ["*"]
