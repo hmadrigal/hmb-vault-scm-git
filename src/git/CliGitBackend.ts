@@ -1,6 +1,4 @@
 import { execFile } from "child_process";
-import { promises as fs } from "fs";
-import * as nodePath from "path";
 import {
 	CommitInfo,
 	FileChange,
@@ -23,15 +21,6 @@ interface RunOptions {
 /** Desktop backend: runs the installed git executable inside the vault folder. */
 function contextArg(contextLines?: number): string[] {
 	return contextLines === undefined ? [] : [`--unified=${contextLines}`];
-}
-
-/** Compares two folder paths, resolving symlinks and Windows case/slash differences. */
-async function samePath(a: string, b: string): Promise<boolean> {
-	const normalize = async (p: string) => {
-		const real = await fs.realpath(p).catch(() => nodePath.resolve(p));
-		return process.platform === "win32" ? real.toLowerCase() : real;
-	};
-	return (await normalize(a)) === (await normalize(b));
 }
 
 export class CliGitBackend implements GitBackend {
@@ -86,8 +75,9 @@ export class CliGitBackend implements GitBackend {
 	 */
 	async isRepo(): Promise<boolean> {
 		try {
-			const topLevel = (await this.run(["rev-parse", "--show-toplevel"])).trim();
-			return (await samePath(topLevel, this.cwd));
+			// Prints "true" inside a working tree, then the vault's path within it (empty at the root).
+			const [insideWorkTree, prefix] = (await this.run(["rev-parse", "--is-inside-work-tree", "--show-prefix"])).split("\n");
+			return insideWorkTree === "true" && prefix === "";
 		} catch {
 			return false;
 		}
@@ -169,26 +159,22 @@ export class CliGitBackend implements GitBackend {
 			const out = await this.run(args, { timeoutMs: NETWORK_TIMEOUT_MS });
 			return { status: /up to date/i.test(out) ? "up-to-date" : "updated" };
 		} catch (error) {
-			if (!(await this.rebaseInProgress())) throw error;
 			const conflicts = (await this.run(["diff", "--name-only", "--relative", "--diff-filter=U"]))
 				.split("\n")
 				.filter(Boolean);
-			await this.run(["rebase", "--abort"]);
+			// Aborting only succeeds when the pull stopped mid-rebase; otherwise report the original error.
+			if (!(await this.abortRebase())) throw error;
 			return { status: "conflict", conflicts };
 		}
 	}
 
-	private async rebaseInProgress(): Promise<boolean> {
-		for (const name of ["rebase-merge", "rebase-apply"]) {
-			const gitPath = (await this.run(["rev-parse", "--git-path", name])).trim();
-			try {
-				await fs.access(nodePath.resolve(this.cwd, gitPath));
-				return true;
-			} catch {
-				// not present
-			}
+	private async abortRebase(): Promise<boolean> {
+		try {
+			await this.run(["rebase", "--abort"]);
+			return true;
+		} catch {
+			return false;
 		}
-		return false;
 	}
 
 	private async requireRemote(remote: string): Promise<void> {
@@ -228,20 +214,16 @@ export class CliGitBackend implements GitBackend {
 	}
 
 	async diffWorking(change: FileChange, staged: boolean, contextLines?: number): Promise<string> {
-		if (!staged && change.index === "?") return this.untrackedDiff(change.path);
+		if (!staged && change.index === "?") return this.untrackedDiff(change.path, contextLines);
 		const paths = change.origPath ? [change.origPath, change.path] : [change.path];
 		const args = ["diff", "--find-renames", ...contextArg(contextLines)];
 		if (staged) args.push("--cached");
 		return this.run([...args, "--", ...paths]);
 	}
 
-	/** git diff ignores untracked files, so render the whole file as added. */
-	private async untrackedDiff(path: string): Promise<string> {
-		const content = await fs.readFile(nodePath.join(this.cwd, path), "utf8");
-		const header = `diff --git a/${path} b/${path}\nnew file (untracked)\n`;
-		if (content.includes("\0")) return `${header}Binary file`;
-		const lines = content.replace(/\n$/, "").split("\n");
-		return header + `@@ -0,0 +1,${lines.length} @@\n` + lines.map((line) => `+${line}`).join("\n");
+	/** git diff ignores untracked files, so compare the file with nothing (exit code 1 means "differs"). */
+	private untrackedDiff(path: string, contextLines?: number): Promise<string> {
+		return this.run(["diff", "--no-index", ...contextArg(contextLines), "--", "/dev/null", path], { okExitCodes: [1] });
 	}
 
 	async restoreFile(hash: string, path: string): Promise<void> {

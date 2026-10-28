@@ -15,6 +15,17 @@ Requires Obsidian 1.13 or later, desktop only for now. It runs your installed `g
 - **Status bar**: branch, number of changes, commits ahead/behind.
 - **Safe pull**: `pull --rebase --autostash`. On a conflict the rebase is aborted, so nothing changes, and you get a notice listing the conflicting files.
 
+## What the plugin can access
+
+Obsidian's plugin review flags this plugin for running external programs. That is how it works, so here is exactly what it does:
+
+- **Runs `git`, and nothing else.** Commands go through Node's `child_process.execFile` to the `git` executable on your PATH, or the path set under *Settings → Git executable*. No shell is involved, and every command runs in the vault folder. The plugin itself only writes one file: the default `.gitignore` when you initialize a repository, through Obsidian's vault API. Everything else is done by `git`.
+- **Files outside the vault.** `git` reads its own configuration (for example `~/.gitconfig`), and when you push, pull or fetch it uses your SSH keys or credential manager. The plugin never reads these.
+- **Network.** The only network traffic is `git` talking to the remote you configured, and only when you push, pull or fetch, or when auto-commit is set to push afterwards.
+- **No telemetry**, no accounts, no ads.
+
+Each release's `main.js`, `manifest.json` and `styles.css` carry a [build provenance attestation](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations/using-artifact-attestations-to-establish-provenance-for-builds). To check that a downloaded file was built from this repository by its release workflow, run `gh attestation verify main.js --repo hmadrigal/hmb-vault-scm-git`.
+
 ## Setup in a vault
 
 1. Run *Initialize repository in this vault*. This creates branch `main`, a default `.gitignore` (workspace files, `.trash/`), and sets `core.autocrlf=false` so notes are stored exactly as Obsidian writes them.

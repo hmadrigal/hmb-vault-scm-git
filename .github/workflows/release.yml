@@ -9,6 +9,9 @@ on:
 
 permissions:
   contents: write
+  # For build provenance attestations of the release files.
+  id-token: write
+  attestations: write
 
 jobs:
   release:
@@ -41,6 +44,15 @@ jobs:
       - run: pnpm lint
 
       - run: pnpm build
+
+      # Signs the built files so users can check they came from this repository and
+      # workflow: gh attestation verify main.js --repo hmadrigal/hmb-vault-scm-git
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            main.js
+            manifest.json
+            styles.css
 
       - name: Publish release
         env:
