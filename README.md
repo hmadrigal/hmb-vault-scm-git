@@ -54,4 +54,13 @@ src/
 
 ### Releasing
 
-Bump `version` in `manifest.json` and `package.json`, add it to `versions.json`, then create a GitHub release with that version as the tag and attach `main.js`, `manifest.json` and `styles.css`.
+Releases follow Obsidian's rules: the tag is the bare version (`0.1.1`, no `v`), it matches `manifest.json`, and `main.js`, `manifest.json` and `styles.css` are attached to the release as separate files.
+
+1. With a clean working tree, run `npm version patch` (or `minor` / `major`). This bumps `package.json`, copies the version into `manifest.json`, adds it to `versions.json` (mapped to the current `minAppVersion`), commits, and creates the tag (`.npmrc` drops the `v` prefix).
+2. `git push --follow-tags`
+3. The *Release* workflow checks that the tag, `manifest.json`, `package.json` and `versions.json` agree, builds, and creates a **draft** release with the three files and generated notes.
+4. Review the draft on GitHub and publish it. Obsidian and BRAT only see published releases.
+
+If you raise `minAppVersion` in `manifest.json`, do it before step 1 so the new entry in `versions.json` records it.
+
+To install a release without the community catalogue, use [BRAT](https://github.com/TfTHacker/obsidian42-brat) with this repository, or copy the three files into `<vault>/.obsidian/plugins/hmb-vault-scm-git/`.

@@ -1,0 +1,51 @@
+name: Release
+
+# Pushing a tag such as 0.1.1 (no "v" prefix, matching manifest.json) builds the
+# plugin and creates a draft GitHub release with the files Obsidian installs.
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Check tag matches manifest and versions.json
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          manifest=$(node -p "require('./manifest.json').version")
+          package=$(node -p "require('./package.json').version")
+          listed=$(node -p "require('./versions.json')['$tag'] ?? ''")
+          if [ "$tag" != "$manifest" ] || [ "$tag" != "$package" ]; then
+            echo "::error::Tag $tag does not match manifest.json ($manifest) / package.json ($package)"; exit 1
+          fi
+          if [ -z "$listed" ]; then
+            echo "::error::versions.json has no entry for $tag"; exit 1
+          fi
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build
+
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --draft \
+            --generate-notes \
+            main.js manifest.json styles.css
