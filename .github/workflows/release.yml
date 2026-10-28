@@ -54,11 +54,23 @@ jobs:
             manifest.json
             styles.css
 
+      # Release notes are this version's section of CHANGELOG.md, written by
+      # `npm version` from the conventional commits since the previous tag.
+      - name: Extract release notes
+        run: |
+          awk -v tag="$GITHUB_REF_NAME" '
+            /^## / { if (found) exit; if (index($0, "## [" tag "]") == 1 || index($0, "## " tag " ") == 1) { found = 1; next } }
+            found { print }
+          ' CHANGELOG.md > release-notes.md
+          if ! grep -q '[^[:space:]]' release-notes.md; then
+            echo "::error::CHANGELOG.md has no section for $GITHUB_REF_NAME"; exit 1
+          fi
+
       - name: Publish release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create "$GITHUB_REF_NAME" \
             --title "$GITHUB_REF_NAME" \
-            --generate-notes \
+            --notes-file release-notes.md \
             main.js manifest.json styles.css
